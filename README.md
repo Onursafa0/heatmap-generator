@@ -2,6 +2,11 @@
 
 Modern ve interaktif heatmap grafikleri oluşturabilen Angular tabanlı web uygulaması. Kullanıcılar manuel olarak veri girebilir ve ECharts ile profesyonel heatmap görselleştirmeleri elde edebilir.
 
+## 🔗 Uygulama Linki
+Uygulamayı canlı olarak denemek için aşağıdaki bağlantıyı ziyaret edebilirsiniz:
+
+https://onursafa0.github.io/heatmap-generator/
+
 ## ✨ Özellikler
 
 - 🎯 **Manuel Veri Girişi**: Dinamik grid oluşturma ve veri girişi
@@ -27,6 +32,8 @@ Modern ve interaktif heatmap grafikleri oluşturabilen Angular tabanlı web uygu
 
 ## 🚀 Kurulum
 
+Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
+
 ### Gereksinimler
 - Node.js (v18 veya üzeri)
 - npm (v9 veya üzeri)
@@ -35,7 +42,7 @@ Modern ve interaktif heatmap grafikleri oluşturabilen Angular tabanlı web uygu
 
 1. **Repoyu klonlayın veya indirin**
    ```bash
-   git clone https://github.com/Onursafa0/HeatmapGenerator.git
+   git clone [https://github.com/Onursafa0/HeatmapGenerator.git](https://github.com/Onursafa0/heatmap-generator)
    cd HeatmapGenerator
    ```
 
