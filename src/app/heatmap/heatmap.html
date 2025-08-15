@@ -1,0 +1,64 @@
+<div class="container">
+  <header class="header">
+    <h1>Heatmap</h1>
+    <p>Veri Görselleştirme</p>
+  </header>
+
+  <div class="card config-card">
+    <h2 class="card-title">Yapılandırma</h2>
+    <form [formGroup]="configForm" (ngSubmit)="generateGrid()" class="config-form">
+      <div class="form-field">
+        <label for="title">Grafik Başlığı</label>
+        <input id="title" type="text" formControlName="title" (input)="onTitleChange()">
+      </div>
+      <div class="form-field">
+        <label for="rows">Satır Sayısı</label>
+        <input id="rows" type="number" formControlName="rows">
+      </div>
+      <div class="form-field">
+        <label for="cols">Sütun Sayısı</label>
+        <input id="cols" type="number" formControlName="cols">
+      </div>
+      <div class="button-group">
+        <button type="submit" class="btn btn-primary" [disabled]="configForm.invalid">
+          <i class="icon-grid"></i> Grid Oluştur
+        </button>
+        <button type="button" class="btn btn-secondary" *ngIf="isGridGenerated" (click)="clearData()">
+          <i class="icon-clear"></i> Veriyi Temizle
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="isGridGenerated" class="card data-card">
+    <h2 class="card-title">Veri Girişi</h2>
+    <div class="data-grid-wrapper">
+      <div class="data-grid" [style.gridTemplateColumns]="'repeat(' + configForm.value.cols + ', minmax(60px, 1fr))'">
+        <ng-container *ngFor="let row of gridData; let i = index; trackBy: trackByRow">
+          <ng-container *ngFor="let cell of row; let j = index; trackBy: trackByCol">
+            <input
+              type="number"
+              class="grid-cell"
+              placeholder="0"
+              [value]="gridData[i][j]"
+              (input)="onCellValueChange($any($event.target).value, i, j)"
+            >
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="card heatmap-card" *ngIf="isGridGenerated">
+    <div class="heatmap-header">
+      <h2 class="card-title">Sıcaklık Haritası</h2>
+      <button type="button" class="btn btn-download" (click)="downloadPDF()">
+        <i class="icon-download"></i> PDF İndir
+      </button>
+    </div>
+    <div class="heatmap-chart-container">
+      <div #heatmapChart class="echarts-chart"></div>
+    </div>
+  </div>
+
+</div>
