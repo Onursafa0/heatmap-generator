@@ -5,7 +5,7 @@ Modern ve interaktif heatmap grafikleri oluşturabilen Angular tabanlı web uygu
 ## 🔗 Uygulama Linki
 Uygulamayı canlı olarak denemek için aşağıdaki bağlantıyı ziyaret edebilirsiniz:
 
-<a href="https://onursafa0.github.io/heatmap-generator/" target="_blank">Heatmap Generator</a>
+[Heatmap Generator](https://onursafa0.github.io/heatmap-generator/)
 
 ## ✨ Özellikler
 
