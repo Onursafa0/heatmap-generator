@@ -15,14 +15,13 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   configForm: FormGroup;
   gridData: (number | null)[][] = [];
   isGridGenerated = false;
-  errorMessage: string | null = null;
   private chart: echarts.ECharts | null = null;
 
   @ViewChild('heatmapChart') private chartContainer!: ElementRef;
 
   constructor(private fb: FormBuilder) {
     this.configForm = this.fb.group({
-      title: ['Sıcaklık Haritası', [Validators.required, Validators.maxLength(100)]],
+      title: ['Heatmap', [Validators.required, Validators.maxLength(100)]],
       rows: [8, [Validators.required, Validators.min(1), Validators.max(50)]],
       cols: [12, [Validators.required, Validators.min(1), Validators.max(50)]],
     });
@@ -110,35 +109,105 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
       
-
+      this.addValuesTable(pdf, imgWidth, imgHeight);
+      
       pdf.setFontSize(10);
       pdf.setTextColor(148, 163, 184); 
-      const currentDate = new Date().toLocaleDateString('tr-TR');
-      pdf.text(`Olusturulma Tarihi: ${currentDate}`, 10, pdfHeight - 10);
+      const currentDate = new Date().toLocaleDateString('en-US');
+      pdf.text(`Generated: ${currentDate}`, 10, pdfHeight - 10);
       
-      const title = this.configForm.value.title || 'Sıcaklık Haritası';
+      const title = this.configForm.value.title || 'Heatmap';
       const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_heatmap.pdf`;
       pdf.save(fileName);
       
     } catch (error) {
-      console.error('PDF oluşturma hatası:', error);
+      console.error('PDF generation error:', error);
       this.downloadCanvasAsPNG(canvas);
+    }
+  }
+
+  private addValuesTable(pdf: jsPDF, imgWidth: number, imgHeight: number): void {
+    const rows = this.configForm.value.rows;
+    const cols = this.configForm.value.cols;
+    
+    const tableTop = 10 + imgHeight + 10;
+    const tableWidth = imgWidth;
+    const tableLeft = 10;
+    
+    const cellWidth = tableWidth / cols;
+    const cellHeight = 8;
+    
+    pdf.setFontSize(8);
+    pdf.setTextColor(0, 0, 0);
+    
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Data Values', tableLeft, tableTop - 5);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    
+    for (let j = 0; j < cols; j++) {
+      const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+      const y = tableTop - 2;
+      const text = `C${j + 1}`;
+      const textWidth = pdf.getTextWidth(text);
+      pdf.text(text, x - (textWidth / 2), y);
+    }
+    
+    for (let i = 0; i < rows; i++) {
+      const x = tableLeft - 5;
+      const y = tableTop + (i * cellHeight) + (cellHeight / 2);
+      const text = `R${i + 1}`;
+      pdf.text(text, x, y);
+    }
+    
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    
+    pdf.rect(tableLeft, tableTop, tableWidth, rows * cellHeight);
+    
+    for (let j = 1; j < cols; j++) {
+      const x = tableLeft + (j * cellWidth);
+      pdf.line(x, tableTop, x, tableTop + rows * cellHeight);
+    }
+    
+    for (let i = 1; i < rows; i++) {
+      const y = tableTop + (i * cellHeight);
+      pdf.line(tableLeft, y, tableLeft + tableWidth, y);
+    }
+    
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const value = this.gridData[i][j];
+        const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+        const y = tableTop + (i * cellHeight) + (cellHeight / 2);
+        
+        if (value !== null && !isNaN(value)) {
+          const text = value.toFixed(1);
+          const textWidth = pdf.getTextWidth(text);
+          pdf.text(text, x - (textWidth / 2), y);
+        } else {
+          const text = '-';
+          const textWidth = pdf.getTextWidth(text);
+          pdf.text(text, x - (textWidth / 2), y);
+        }
+      }
     }
   }
 
   private downloadCanvasAsPNG(canvas: HTMLCanvasElement): void {
     const link = document.createElement('a');
-    const title = this.configForm.value.title || 'Sıcaklık Haritası';
+    const title = this.configForm.value.title || 'Heatmap';
     link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_heatmap.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   }
 
-  trackByRow(index: number, row: any[]): number {
+  trackByRow(index: number): number {
     return index;
   }
 
-  trackByCol(index: number, cell: number | null): number {
+  trackByCol(index: number): number {
     return index;
   }
 
@@ -179,7 +248,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
 
     const option = {
       title: {
-        text: this.configForm.value.title || 'Sıcaklık Haritası',
+        text: this.configForm.value.title || 'Heatmap',
         left: 'center',
         top: '2%',
         textStyle: {
@@ -191,7 +260,8 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       tooltip: {
         position: 'top',
         formatter: function (params: any) {
-          return `Sıcaklık: <b>${params.data[2].toFixed(2)}</b>`;
+          const value = params.data[2];
+          return `Value: <b>${typeof value === 'number' ? value.toFixed(2) : value}</b>`;
         }
       },
       grid: {
@@ -200,7 +270,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       },
       xAxis: {
         type: 'category',
-        data: Array.from({ length: this.configForm.value.cols }, (_, i) => `S${i + 1}`),
+        data: Array.from({ length: this.configForm.value.cols }, (_, i) => `C${i + 1}`),
         splitArea: {
           show: true
         },
@@ -242,7 +312,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         }
       },
       series: [{
-        name: 'Sıcaklık',
+        name: 'Value',
         type: 'heatmap',
         data: data,
         label: {
@@ -260,7 +330,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         left: 'left',
         bottom: 'bottom',
         style: {
-          text: `Ortalama: ${average.toFixed(2)}`,
+          text: `Average: ${average.toFixed(2)}`,
           fontSize: 16,
           fontWeight: 'bold',
           fill: '#000000',
@@ -277,7 +347,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   private getEmptyChartOption(): any {
     return {
       title: {
-        text: this.configForm.value.title || 'Sıcaklık Haritası',
+        text: this.configForm.value.title || 'Heatmap',
         left: 'center',
         top: '2%',
         textStyle: {
@@ -301,7 +371,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         }
       },
       series: [{
-        name: 'Sıcaklık',
+        name: 'Value',
         type: 'heatmap',
         data: [],
         label: {

@@ -1,104 +1,167 @@
 # 🔥 Heatmap Generator
 
-Modern ve interaktif heatmap grafikleri oluşturabilen Angular tabanlı web uygulaması. Kullanıcılar manuel olarak veri girebilir ve ECharts ile profesyonel heatmap görselleştirmeleri elde edebilir.
+A modern and interactive heatmap chart generator built with Angular. Users can manually input data and create professional heatmap visualizations using ECharts.
 
-## 🔗 Uygulama Linki
-Uygulamayı canlı olarak denemek için aşağıdaki bağlantıyı ziyaret edebilirsiniz:
+## 🔗 Live Demo
+Try the application live at:
 
 [Heatmap Generator](https://onursafa0.github.io/heatmap-generator/)
 
-## ✨ Özellikler
+## ✨ Features
 
-- 🎯 **Manuel Veri Girişi**: Dinamik grid oluşturma ve veri girişi
-- 📊 **ECharts Entegrasyonu**: Güçlü ve hızlı grafik render motoru
-- 🎨 **Modern UI/UX**: Profesyonel görünüm
-- 📱 **Responsive Tasarım**: Tüm cihazlarla uyumlu görünüm
-- ⚡ **Gerçek Zamanlı Güncelleme**: Veri değişikliklerinde anında grafik güncelleme
-- 📈 **Otomatik Ortalama Hesabı:** Grafiğe girilen tüm değerlerin ortalamasını anlık olarak hesaplar ve gösterir.
-- 🎨 **Özelleştirilebilir Renkler**: Sarıdan kırmızıya doğru renk paleti
-- 🔍 **Interaktif Tooltip**: Hover durumunda detaylı bilgi gösterimi
-- ✏️ **Özelleştirilebilir Başlık**: Kullanıcı tarafından girilebilen grafik başlığı
-- 📥 **PDF İndirme**: Oluşturulan grafiği PDF formatında indirme özelliği
+- 🎯 **Manual Data Input**: Dynamic grid creation and data entry
+- 📊 **ECharts Integration**: Powerful and fast chart rendering engine
+- 🎨 **Modern UI/UX**: Professional appearance
+- 📱 **Responsive Design**: Compatible with all devices
+- ⚡ **Real-time Updates**: Instant chart updates on data changes
+- 📈 **Automatic Average Calculation**: Calculates and displays the average of all entered values
+- 🎨 **Customizable Colors**: Yellow to red color palette
+- 🔍 **Interactive Tooltip**: Detailed information on hover
+- ✏️ **Customizable Title**: User-defined chart title
+- 📥 **PDF Export**: Download generated charts in PDF format with data table
 
-## 🛠️ Teknolojiler
+## 🛠️ Technologies
 
 - **Frontend Framework**: Angular 20
-- **Grafik Kütüphanesi**: ECharts 6.0
-- **PDF Kütüphanesi**: jsPDF
-- **Programlama Dili**: TypeScript
+- **Chart Library**: ECharts 6.0
+- **PDF Library**: jsPDF 3.0
+- **Programming Language**: TypeScript 5.8
 - **Styling**: SCSS
 - **Build Tool**: Angular CLI
 - **Package Manager**: npm
+- **Deployment**: GitHub Pages
 
-## 🚀 Kurulum
+## 🚀 Installation
 
-Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyebilirsiniz.
+Follow these steps to run the project on your computer.
 
-### Gereksinimler
-- Node.js (v18 veya üzeri)
-- npm (v9 veya üzeri)
+### Requirements
+- Node.js (v18 or higher)
+- npm (v9 or higher)
+- Angular CLI (v20 or higher)
 
-### Adımlar
+### Steps
 
-1. **Repoyu klonlayın veya indirin**
+1. **Clone or download the repository**
    ```bash
-   git clone [https://github.com/Onursafa0/HeatmapGenerator.git](https://github.com/Onursafa0/heatmap-generator)
-   cd HeatmapGenerator
+   git clone https://github.com/Onursafa0/heatmap-generator
+   cd heatmap-generator
    ```
 
-2. **Bağımlılıkları yükleyin**
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Geliştirme sunucusunu başlatın**
+3. **Start development server**
    ```bash
    npm start
    ```
 
-4. **Tarayıcıda açın**
+4. **Open in browser**
    ```
    http://localhost:4200
    ```
 
-## 📖 Kullanım
+### Build for Production
 
-### 1. Grafik Başlığı
-- Grafik için özel başlık girin
-- Başlık grafiğin üstünde görünecek
+```bash
+npm run build
+```
 
-### 2. Grid Oluşturma
-- Satır ve sütun sayısını belirleyin (1-50 arası)
-- "Grid Oluştur" butonuna tıklayın
+### Deploy to GitHub Pages
 
-### 3. Veri Girişi
-- Oluşturulan grid'e sayısal değerler girin
-- Boş hücreler otomatik olarak atlanır
+```bash
+npm run deploy:gh
+```
 
-### 4. Grafik Görüntüleme
-- ECharts ile heatmap otomatik olarak oluşturulur
-- Renk skalası sarıdan kırmızıya doğru gider
-- Başlık grafiğin üstünde görünür
+## 📖 Usage
 
-### 5. Grafik İndirme
-- "PDF İndir" butonuna tıklayarak grafiği PDF formatında indirin
-- İndirilen PDF dosyası başlık ile adlandırılır ve oluşturulma tarihi içerir
+### 1. Chart Title
+- Enter a custom title for your chart
+- The title will appear at the top of the chart
 
-### 6. Gerçek Zamanlı Güncelleme
-- Veri değişikliklerinde grafik anında güncellenir
-- Başlık değişikliklerinde grafik otomatik güncellenir
-- Tooltip ile detaylı bilgi görüntüleme
+### 2. Grid Creation
+- Set the number of rows and columns (1-50 range)
+- Click "Generate Grid" button
 
-## 🎨 Özelleştirme
+### 3. Data Input
+- Enter numerical values in the created grid
+- Empty cells are automatically skipped
 
-### Renk Paleti
-Uygulama varsayılan olarak sarıdan kırmızıya doğru renk geçişi kullanır:
-- **Düşük değerler**: Sarı (`#ffffcc`)
-- **Orta değerler**: Turuncu (`#fdae61`)
-- **Yüksek değerler**: Kırmızı (`#a50026`)
+### 4. Chart Display
+- Heatmap is automatically generated using ECharts
+- Color scale goes from yellow to red
+- Title appears at the top of the chart
 
-### Grid Boyutları
+### 5. Chart Export
+- Click "Download PDF" to export the chart in PDF format
+- The PDF includes both the heatmap and a data table
+- Downloaded file is named with the title and includes generation date
+
+### 6. Real-time Updates
+- Chart updates instantly on data changes
+- Chart updates automatically on title changes
+- Detailed information display with tooltip
+
+## 🎨 Customization
+
+### Color Palette
+The application uses a default yellow to red color transition:
+- **Low values**: Yellow (`#ffffcc`)
+- **Medium values**: Orange (`#fdae61`)
+- **High values**: Red (`#a50026`)
+
+### Grid Dimensions
 - **Minimum**: 1x1
-- **Maksimum**: 50x50
-- **Varsayılan**: 8x12
----
+- **Maximum**: 50x50
+- **Default**: 8x12
+
+## 📊 PDF Export Features
+
+The PDF export includes:
+- **Heatmap visualization**: Color-coded data representation
+- **Data table**: Excel-style table with all values
+- **Column headers**: C1, C2, C3, etc.
+- **Row labels**: R1, R2, R3, etc.
+- **Generation date**: Automatically added to the PDF
+- **Custom filename**: Based on the chart title
+
+## 📁 Project Structure
+
+```
+heatmap-generator/
+├── src/
+│   ├── app/
+│   │   ├── heatmap/
+│   │   │   ├── heatmap.ts          # Main component logic
+│   │   │   ├── heatmap.html        # Component template
+│   │   │   └── heatmap.scss        # Component styles
+│   │   ├── app.ts                  # Root component
+│   │   ├── app.routes.ts           # Application routes
+│   │   └── app.config.ts           # Application configuration
+│   ├── main.ts                     # Application entry point
+│   └── styles.scss                 # Global styles
+├── package.json                    # Dependencies and scripts
+└── README.md                       # Project documentation
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Chart not displaying**: Make sure you have entered at least one valid numerical value in the grid
+2. **PDF download fails**: Check if your browser supports PDF generation and has sufficient memory
+3. **Grid not generating**: Ensure the form values are within the valid range (1-50 for rows/columns)
+
+### Browser Compatibility
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
