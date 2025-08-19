@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/heatmap-uygulamasi",
+            "outputPath": "dist/heatmap-generator",
             "index": "src/index.html",
             "polyfills": [
               "zone.js"
