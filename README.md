@@ -19,6 +19,7 @@ Try the application live at:
 - 🔍 **Interactive Tooltip**: Detailed information on hover
 - ✏️ **Customizable Title**: User-defined chart title
 - 📥 **PDF Export**: Download generated charts in PDF format with data table
+- 🧹 **Clean Code**: Well-structured, comment-free, and maintainable codebase
 
 ## 🛠️ Technologies
 
@@ -26,7 +27,7 @@ Try the application live at:
 - **Chart Library**: ECharts 6.0
 - **PDF Library**: jsPDF 3.0
 - **Programming Language**: TypeScript 5.8
-- **Styling**: SCSS
+- **Styling**: SCSS with CSS Variables
 - **Build Tool**: Angular CLI
 - **Package Manager**: npm
 - **Deployment**: GitHub Pages
@@ -126,6 +127,7 @@ The PDF export includes:
 - **Row labels**: R1, R2, R3, etc.
 - **Generation date**: Automatically added to the PDF
 - **Custom filename**: Based on the chart title
+- **Multi-page support**: Handles large datasets with automatic pagination
 
 ## 📁 Project Structure
 
@@ -136,15 +138,31 @@ heatmap-generator/
 │   │   ├── heatmap/
 │   │   │   ├── heatmap.ts          # Main component logic
 │   │   │   ├── heatmap.html        # Component template
-│   │   │   └── heatmap.scss        # Component styles
+│   │   │   ├── heatmap.scss        # Component styles
+│   │   │   └── heatmap.spec.ts     # Component tests
 │   │   ├── app.ts                  # Root component
 │   │   ├── app.routes.ts           # Application routes
-│   │   └── app.config.ts           # Application configuration
+│   │   ├── app.config.ts           # Application configuration
+│   │   └── app.spec.ts             # Root component tests
 │   ├── main.ts                     # Application entry point
-│   └── styles.scss                 # Global styles
+│   ├── styles.scss                 # Global styles
+│   └── index.html                  # Main HTML file
+├── public/
+│   └── favicon.ico                 # Application icon
 ├── package.json                    # Dependencies and scripts
+├── angular.json                    # Angular CLI configuration
+├── tsconfig.json                   # TypeScript configuration
 └── README.md                       # Project documentation
 ```
+
+## 🧹 Code Quality
+
+The project maintains high code quality standards:
+- **Clean Code**: No unnecessary comments or unused variables
+- **TypeScript**: Strict type checking enabled
+- **Modular Structure**: Well-organized component architecture
+- **Responsive Design**: Mobile-first approach with CSS Grid and Flexbox
+- **Error Handling**: Proper error handling for PDF generation and chart rendering
 
 ## 🐛 Troubleshooting
 
@@ -160,7 +178,6 @@ heatmap-generator/
 - Firefox 88+
 - Safari 14+
 - Edge 90+
-
 
 ## 📄 License
 

@@ -69,13 +69,85 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   downloadPDF(): void {
     if (!this.chart) return;
     
-    const dataURL = this.chart.getDataURL({
-      type: 'png',
-      pixelRatio: 2,
-      backgroundColor: '#ffffff'
-    });
+    const originalWidth = this.chartContainer.nativeElement.style.width;
+    const originalHeight = this.chartContainer.nativeElement.style.height;
+    const originalOption = this.chart.getOption();
     
-    this.convertPNGToPDF(dataURL);
+    const pdfOption = {
+      ...originalOption,
+      title: {
+        ...(originalOption as any).title,
+        show: false
+      }
+    };
+    this.chart.setOption(pdfOption);
+    
+    const desktopWidth = 1200;
+    const desktopHeight = 800;
+    
+    this.chartContainer.nativeElement.style.width = desktopWidth + 'px';
+    this.chartContainer.nativeElement.style.height = desktopHeight + 'px';
+    this.chart.resize();
+    
+    setTimeout(() => {
+      this.waitForChartRender().then(() => {
+        if (!this.chart) return;
+        const dataURL = this.chart.getDataURL({
+          type: 'png',
+          pixelRatio: 4,
+          backgroundColor: '#ffffff'
+        });
+        
+        this.chartContainer.nativeElement.style.width = originalWidth;
+        this.chartContainer.nativeElement.style.height = originalHeight;
+        this.chart.setOption(originalOption);
+        this.chart.resize();
+        
+        this.convertPNGToPDF(dataURL);
+      }).catch(() => {
+        setTimeout(() => {
+          if (this.chart) {
+            const dataURL = this.chart.getDataURL({
+              type: 'png',
+              pixelRatio: 4,
+              backgroundColor: '#ffffff'
+            });
+            
+            this.chartContainer.nativeElement.style.width = originalWidth;
+            this.chartContainer.nativeElement.style.height = originalHeight;
+            this.chart.setOption(originalOption);
+            this.chart.resize();
+            
+            this.convertPNGToPDF(dataURL);
+          }
+        }, 500);
+      });
+    }, 100);
+  }
+
+  private waitForChartRender(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.chart) {
+        reject();
+        return;
+      }
+      
+      const checkRender = () => {
+        try {
+          const canvas = this.chart!.getDom().querySelector('canvas');
+          if (canvas && canvas.width > 0 && canvas.height > 0) {
+            resolve();
+          } else {
+            setTimeout(checkRender, 100);
+          }
+        } catch (error) {
+          reject();
+        }
+      };
+      
+      checkRender();
+      setTimeout(() => reject(), 3000);
+    });
   }
 
   private convertPNGToPDF(dataURL: string): void {
@@ -93,6 +165,11 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       }
     };
     
+    img.onerror = () => {
+      console.error('Image loading failed');
+      this.downloadCanvasAsPNG(canvas);
+    };
+    
     img.src = dataURL;
   }
 
@@ -103,18 +180,8 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      const imgWidth = pdfWidth - 20; 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-      
-      this.addValuesTable(pdf, imgWidth, imgHeight);
-      
-      pdf.setFontSize(10);
-      pdf.setTextColor(148, 163, 184); 
-      const currentDate = new Date().toLocaleDateString('en-US');
-      pdf.text(`Generated: ${currentDate}`, 10, pdfHeight - 10);
+      this.createHeatmapPage(pdf, canvas, pdfWidth, pdfHeight);
+      this.createDataTablePages(pdf, pdfWidth, pdfHeight);
       
       const title = this.configForm.value.title || 'Heatmap';
       const fileName = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_heatmap.pdf`;
@@ -126,29 +193,104 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     }
   }
 
-  private addValuesTable(pdf: jsPDF, imgWidth: number, imgHeight: number): void {
+  private createHeatmapPage(pdf: jsPDF, canvas: HTMLCanvasElement, pdfWidth: number, pdfHeight: number): void {
+    const title = this.configForm.value.title || 'Heatmap';
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(0, 0, 0);
+    const titleWidth = pdf.getTextWidth(title);
+    pdf.text(title, (pdfWidth - titleWidth) / 2, 25);
+    
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(100, 100, 100);
+    const subtitle = `Generated on ${new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })}`;
+    const subtitleWidth = pdf.getTextWidth(subtitle);
+    pdf.text(subtitle, (pdfWidth - subtitleWidth) / 2, 35);
+    
+    const chartTop = 50;
+    const chartHeight = pdfHeight - 80;
+    const chartWidth = pdfWidth - 40;
+    const imgHeight = Math.min(chartHeight, (canvas.height * chartWidth) / canvas.width);
+    
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 20, chartTop, chartWidth, imgHeight);
+    
+    pdf.setFontSize(10);
+    pdf.setTextColor(148, 163, 184);
+    const footerText = `Heatmap Generator - ${title}`;
+    const footerWidth = pdf.getTextWidth(footerText);
+    pdf.text(footerText, (pdfWidth - footerWidth) / 2, pdfHeight - 15);
+  }
+
+  private createDataTablePages(pdf: jsPDF, pdfWidth: number, pdfHeight: number): void {
     const rows = this.configForm.value.rows;
     const cols = this.configForm.value.cols;
     
-    const tableTop = 10 + imgHeight + 10;
-    const tableWidth = imgWidth;
-    const tableLeft = 10;
+    pdf.addPage();
     
-    const cellWidth = tableWidth / cols;
-    const cellHeight = 8;
-    
-    pdf.setFontSize(8);
-    pdf.setTextColor(0, 0, 0);
-    
-    pdf.setFontSize(10);
+    const title = this.configForm.value.title || 'Heatmap';
+    pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Data Values', tableLeft, tableTop - 5);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
+    pdf.setTextColor(0, 0, 0);
+    const pageTitle = `Data Values - ${title}`;
+    const pageTitleWidth = pdf.getTextWidth(pageTitle);
+    pdf.text(pageTitle, (pdfWidth - pageTitleWidth) / 2, 25);
     
+    const allValues = this.gridData.flat().filter(d => d !== null && !isNaN(d)) as number[];
+    if (allValues.length > 0) {
+      const min = Math.min(...allValues);
+      const max = Math.max(...allValues);
+      const avg = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      const statsText = `Min: ${min.toFixed(2)} | Max: ${max.toFixed(2)} | Average: ${avg.toFixed(2)} | Total Values: ${allValues.length}`;
+      const statsWidth = pdf.getTextWidth(statsText);
+      pdf.text(statsText, (pdfWidth - statsWidth) / 2, 35);
+    }
+    
+    const tableTop = 45;
+    const tableWidth = pdfWidth - 40;
+    const availableHeight = pdfHeight - tableTop - 20;
+    
+    if (cols > 24) {
+      this.createWideDataTable(pdf, 20, tableTop, tableWidth, availableHeight, rows, cols);
+    } else {
+      const cellWidth = Math.max(10, tableWidth / cols);
+      const cellHeight = Math.max(8, availableHeight / (rows + 1));
+      const headerHeight = 10;
+      const totalTableHeight = headerHeight + (rows * cellHeight);
+      
+      if (totalTableHeight > availableHeight) {
+        this.createMultiPageDataTable(pdf, 20, tableTop, tableWidth, cellWidth, cellHeight, headerHeight, rows, cols, availableHeight);
+      } else {
+        this.createSinglePageDataTable(pdf, 20, tableTop, tableWidth, cellWidth, cellHeight, headerHeight, rows, cols);
+      }
+    }
+  }
+
+  private createSinglePageDataTable(pdf: jsPDF, tableLeft: number, tableTop: number, tableWidth: number, 
+                                  cellWidth: number, cellHeight: number, headerHeight: number, rows: number, cols: number): void {
+    const totalTableHeight = headerHeight + (rows * cellHeight);
+    
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    pdf.rect(tableLeft, tableTop, tableWidth, totalTableHeight);
+    
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(0, 0, 0);
     for (let j = 0; j < cols; j++) {
       const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
-      const y = tableTop - 2;
+      const y = tableTop + (headerHeight / 2) + 2;
       const text = `C${j + 1}`;
       const textWidth = pdf.getTextWidth(text);
       pdf.text(text, x - (textWidth / 2), y);
@@ -156,39 +298,319 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     
     for (let i = 0; i < rows; i++) {
       const x = tableLeft - 5;
-      const y = tableTop + (i * cellHeight) + (cellHeight / 2);
+      const y = tableTop + headerHeight + (i * cellHeight) + (cellHeight / 2) + 2;
       const text = `R${i + 1}`;
       pdf.text(text, x, y);
     }
     
-    pdf.setDrawColor(0, 0, 0);
-    pdf.setLineWidth(0.5);
-    
-    pdf.rect(tableLeft, tableTop, tableWidth, rows * cellHeight);
-    
     for (let j = 1; j < cols; j++) {
       const x = tableLeft + (j * cellWidth);
-      pdf.line(x, tableTop, x, tableTop + rows * cellHeight);
+      pdf.line(x, tableTop, x, tableTop + totalTableHeight);
     }
     
-    for (let i = 1; i < rows; i++) {
-      const y = tableTop + (i * cellHeight);
+    for (let i = 1; i <= rows; i++) {
+      const y = tableTop + headerHeight + (i * cellHeight);
       pdf.line(tableLeft, y, tableLeft + tableWidth, y);
     }
+    
+    pdf.setLineWidth(1);
+    pdf.line(tableLeft, tableTop + headerHeight, tableLeft + tableWidth, tableTop + headerHeight);
+    pdf.setLineWidth(0.5);
+    
+    this.writeSimpleTableValues(pdf, tableLeft, tableTop + headerHeight, cellWidth, cellHeight, rows, cols);
+  }
+
+  private createWideDataTable(pdf: jsPDF, tableLeft: number, tableTop: number, tableWidth: number, 
+                            availableHeight: number, rows: number, cols: number): void {
+    const colsPerPage = 24;
+    const rowsPerPage = 18;
+    const totalColPages = Math.ceil(cols / colsPerPage);
+    const totalRowPages = Math.ceil(rows / rowsPerPage);
+    
+    const remainingCols = cols % colsPerPage;
+    const minColsPerPage = 15;
+    
+    if (remainingCols > 0 && remainingCols < minColsPerPage && totalColPages > 1) {
+      const colsToMove = minColsPerPage - remainingCols;
+      const adjustedColsPerPage = colsPerPage - Math.ceil(colsToMove / (totalColPages - 1));
+      
+      for (let colPage = 0; colPage < totalColPages; colPage++) {
+        for (let rowPage = 0; rowPage < totalRowPages; rowPage++) {
+          if (colPage > 0 || rowPage > 0) {
+            pdf.addPage();
+            tableTop = 20;
+          }
+          
+          let startCol, endCol;
+          if (colPage === totalColPages - 1) {
+            startCol = colPage * adjustedColsPerPage;
+            endCol = cols;
+          } else {
+            startCol = colPage * adjustedColsPerPage;
+            endCol = Math.min((colPage + 1) * adjustedColsPerPage, cols);
+          }
+          
+          const pageCols = endCol - startCol;
+          
+          const startRow = rowPage * rowsPerPage;
+          const endRow = Math.min((rowPage + 1) * rowsPerPage, rows);
+          const pageRows = endRow - startRow;
+          
+          const cellWidth = Math.max(8, tableWidth / pageCols);
+          const cellHeight = Math.max(8, availableHeight / (pageRows + 1));
+          const headerHeight = 10;
+          const totalTableHeight = headerHeight + (pageRows * cellHeight);
+          
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          const pageTitle = `Data Values (Rows ${startRow + 1}-${endRow}, Columns ${startCol + 1}-${endCol} of ${rows}x${cols})`;
+          pdf.text(pageTitle, tableLeft, tableTop - 5);
+          
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.5);
+          pdf.rect(tableLeft, tableTop, pageCols * cellWidth, totalTableHeight);
+          
+          pdf.setFontSize(7);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          for (let j = 0; j < pageCols; j++) {
+            const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+            const y = tableTop + (headerHeight / 2) + 2;
+            const text = `C${startCol + j + 1}`;
+            const textWidth = pdf.getTextWidth(text);
+            pdf.text(text, x - (textWidth / 2), y);
+          }
+          
+          for (let i = 0; i < pageRows; i++) {
+            const x = tableLeft - 5;
+            const y = tableTop + headerHeight + (i * cellHeight) + (cellHeight / 2) + 2;
+            const text = `R${startRow + i + 1}`;
+            pdf.text(text, x, y);
+          }
+          
+          for (let j = 1; j < pageCols; j++) {
+            const x = tableLeft + (j * cellWidth);
+            pdf.line(x, tableTop, x, tableTop + totalTableHeight);
+          }
+          
+          for (let i = 1; i <= pageRows; i++) {
+            const y = tableTop + headerHeight + (i * cellHeight);
+            pdf.line(tableLeft, y, tableLeft + (pageCols * cellWidth), y);
+          }
+          
+          pdf.setLineWidth(1);
+          pdf.line(tableLeft, tableTop + headerHeight, tableLeft + (pageCols * cellWidth), tableTop + headerHeight);
+          pdf.setLineWidth(0.5);
+          
+          this.writeWideTableValuesForPage(pdf, tableLeft, tableTop + headerHeight, cellWidth, cellHeight, startRow, endRow, startCol, endCol);
+        }
+      }
+    } else {
+      for (let colPage = 0; colPage < totalColPages; colPage++) {
+        for (let rowPage = 0; rowPage < totalRowPages; rowPage++) {
+          if (colPage > 0 || rowPage > 0) {
+            pdf.addPage();
+            tableTop = 20;
+          }
+          
+          const startCol = colPage * colsPerPage;
+          const endCol = Math.min((colPage + 1) * colsPerPage, cols);
+          const pageCols = endCol - startCol;
+          
+          const startRow = rowPage * rowsPerPage;
+          const endRow = Math.min((rowPage + 1) * rowsPerPage, rows);
+          const pageRows = endRow - startRow;
+          
+          const cellWidth = Math.max(8, tableWidth / pageCols);
+          const cellHeight = Math.max(8, availableHeight / (pageRows + 1));
+          const headerHeight = 10;
+          const totalTableHeight = headerHeight + (pageRows * cellHeight);
+          
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          const pageTitle = `Data Values (Rows ${startRow + 1}-${endRow}, Columns ${startCol + 1}-${endCol} of ${rows}x${cols})`;
+          pdf.text(pageTitle, tableLeft, tableTop - 5);
+          
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.5);
+          pdf.rect(tableLeft, tableTop, pageCols * cellWidth, totalTableHeight);
+          
+          pdf.setFontSize(7);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          for (let j = 0; j < pageCols; j++) {
+            const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+            const y = tableTop + (headerHeight / 2) + 2;
+            const text = `C${startCol + j + 1}`;
+            const textWidth = pdf.getTextWidth(text);
+            pdf.text(text, x - (textWidth / 2), y);
+          }
+          
+          for (let i = 0; i < pageRows; i++) {
+            const x = tableLeft - 5;
+            const y = tableTop + headerHeight + (i * cellHeight) + (cellHeight / 2) + 2;
+            const text = `R${startRow + i + 1}`;
+            pdf.text(text, x, y);
+          }
+          
+          for (let j = 1; j < pageCols; j++) {
+            const x = tableLeft + (j * cellWidth);
+            pdf.line(x, tableTop, x, tableTop + totalTableHeight);
+          }
+          
+          for (let i = 1; i <= pageRows; i++) {
+            const y = tableTop + headerHeight + (i * cellHeight);
+            pdf.line(tableLeft, y, tableLeft + (pageCols * cellWidth), y);
+          }
+          
+          pdf.setLineWidth(1);
+          pdf.line(tableLeft, tableTop + headerHeight, tableLeft + (pageCols * cellWidth), tableTop + headerHeight);
+          pdf.setLineWidth(0.5);
+          
+          this.writeWideTableValuesForPage(pdf, tableLeft, tableTop + headerHeight, cellWidth, cellHeight, startRow, endRow, startCol, endCol);
+        }
+      }
+    }
+  }
+
+  private createMultiPageDataTable(pdf: jsPDF, tableLeft: number, tableTop: number, tableWidth: number, 
+                                 cellWidth: number, cellHeight: number, headerHeight: number, rows: number, cols: number, 
+                                 availableHeight: number): void {
+    const rowsPerPage = Math.floor(availableHeight / cellHeight);
+    const totalPages = Math.ceil(rows / rowsPerPage);
+    
+    for (let page = 0; page < totalPages; page++) {
+      if (page > 0) {
+        pdf.addPage();
+        tableTop = 20;
+      }
+      
+      const startRow = page * rowsPerPage;
+      const endRow = Math.min((page + 1) * rowsPerPage, rows);
+      const pageRows = endRow - startRow;
+      const pageHeight = headerHeight + (pageRows * cellHeight);
+      
+      if (totalPages > 1) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`Data Values (Page ${page + 1}/${totalPages})`, tableLeft, tableTop - 5);
+      }
+      
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(tableLeft, tableTop, tableWidth, pageHeight);
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      for (let j = 0; j < cols; j++) {
+        const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+        const y = tableTop + (headerHeight / 2) + 2;
+        const text = `C${j + 1}`;
+        const textWidth = pdf.getTextWidth(text);
+        pdf.text(text, x - (textWidth / 2), y);
+      }
+      
+      for (let i = startRow; i < endRow; i++) {
+        const x = tableLeft - 5;
+        const y = tableTop + headerHeight + ((i - startRow) * cellHeight) + (cellHeight / 2) + 2;
+        const text = `R${i + 1}`;
+        pdf.text(text, x, y);
+      }
+      
+      for (let j = 1; j < cols; j++) {
+        const x = tableLeft + (j * cellWidth);
+        pdf.line(x, tableTop, x, tableTop + pageHeight);
+      }
+      
+      for (let i = 1; i <= pageRows; i++) {
+        const y = tableTop + headerHeight + (i * cellHeight);
+        pdf.line(tableLeft, y, tableLeft + tableWidth, y);
+      }
+      
+      pdf.setLineWidth(1);
+      pdf.line(tableLeft, tableTop + headerHeight, tableLeft + tableWidth, tableTop + headerHeight);
+      pdf.setLineWidth(0.5);
+      
+      this.writeSimpleTableValuesForPage(pdf, tableLeft, tableTop + headerHeight, cellWidth, cellHeight, startRow, endRow, cols);
+    }
+  }
+
+  private writeSimpleTableValues(pdf: jsPDF, tableLeft: number, tableTop: number, cellWidth: number, 
+                               cellHeight: number, rows: number, cols: number): void {
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
     
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
         const value = this.gridData[i][j];
         const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
-        const y = tableTop + (i * cellHeight) + (cellHeight / 2);
+        const y = tableTop + (i * cellHeight) + (cellHeight / 2) + 2;
         
         if (value !== null && !isNaN(value)) {
           const text = value.toFixed(1);
           const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(0, 0, 0);
           pdf.text(text, x - (textWidth / 2), y);
         } else {
           const text = '-';
           const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(150, 150, 150);
+          pdf.text(text, x - (textWidth / 2), y);
+        }
+      }
+    }
+  }
+
+  private writeSimpleTableValuesForPage(pdf: jsPDF, tableLeft: number, tableTop: number, cellWidth: number, 
+                                      cellHeight: number, startRow: number, endRow: number, cols: number): void {
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    
+    for (let i = startRow; i < endRow; i++) {
+      for (let j = 0; j < cols; j++) {
+        const value = this.gridData[i][j];
+        const x = tableLeft + (j * cellWidth) + (cellWidth / 2);
+        const y = tableTop + ((i - startRow) * cellHeight) + (cellHeight / 2) + 2;
+        
+        if (value !== null && !isNaN(value)) {
+          const text = value.toFixed(1);
+          const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(text, x - (textWidth / 2), y);
+        } else {
+          const text = '-';
+          const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(150, 150, 150);
+          pdf.text(text, x - (textWidth / 2), y);
+        }
+      }
+    }
+  }
+
+  private writeWideTableValuesForPage(pdf: jsPDF, tableLeft: number, tableTop: number, cellWidth: number, 
+                                    cellHeight: number, startRow: number, endRow: number, startCol: number, endCol: number): void {
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'normal');
+    
+    for (let i = startRow; i < endRow; i++) {
+      for (let j = startCol; j < endCol; j++) {
+        const value = this.gridData[i][j];
+        const x = tableLeft + ((j - startCol) * cellWidth) + (cellWidth / 2);
+        const y = tableTop + ((i - startRow) * cellHeight) + (cellHeight / 2) + 2;
+        
+        if (value !== null && !isNaN(value)) {
+          const text = value.toFixed(1);
+          const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(text, x - (textWidth / 2), y);
+        } else {
+          const text = '-';
+          const textWidth = pdf.getTextWidth(text);
+          pdf.setTextColor(150, 150, 150);
           pdf.text(text, x - (textWidth / 2), y);
         }
       }
@@ -250,23 +672,31 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       title: {
         text: this.configForm.value.title || 'Heatmap',
         left: 'center',
-        top: '2%',
+        top: '3%',
         textStyle: {
           color: '#000000',
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: 'bold'
         }
       },
       tooltip: {
         position: 'top',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        textStyle: {
+          color: '#333'
+        },
         formatter: function (params: any) {
           const value = params.data[2];
           return `Value: <b>${typeof value === 'number' ? value.toFixed(2) : value}</b>`;
         }
       },
       grid: {
-        height: '65%',
-        top: '15%'
+        height: '60%',
+        top: '18%',
+        left: '10%',
+        right: '10%'
       },
       xAxis: {
         type: 'category',
@@ -306,7 +736,13 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
+        itemWidth: 20,
+        itemHeight: 120,
+        textStyle: {
+          fontSize: 12,
+          color: '#333'
+        },
         inRange: {
           color: ['#ffffcc', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
         }
@@ -318,10 +754,16 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         label: {
           show: false
         },
+        itemStyle: {
+          borderColor: '#fff',
+          borderWidth: 1
+        },
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            borderWidth: 2,
+            borderColor: '#333'
           }
         }
       }],
@@ -331,13 +773,13 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         bottom: 'bottom',
         style: {
           text: `Average: ${average.toFixed(2)}`,
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: 'bold',
           fill: '#000000',
           stroke: '#ffffff',
           strokeWidth: 2
         },
-        position: [20, -20]
+        position: [20, -30]
       }]
     };
 
@@ -349,18 +791,33 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       title: {
         text: this.configForm.value.title || 'Heatmap',
         left: 'center',
-        top: '2%',
+        top: '3%',
         textStyle: {
           color: '#000000',
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: 'bold'
         }
+      },
+      grid: {
+        height: '60%',
+        top: '18%',
+        left: '10%',
+        right: '10%'
       },
       xAxis: {
         type: 'category',
         data: [],
         splitArea: {
           show: true
+        },
+        axisLabel: {
+          show: false
+        },
+        axisTick: {
+          show: false
+        },
+        axisLine: {
+          show: false
         }
       },
       yAxis: {
@@ -368,6 +825,32 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         data: [],
         splitArea: {
           show: true
+        },
+        axisLabel: {
+          show: false
+        },
+        axisTick: {
+          show: false
+        },
+        axisLine: {
+          show: false
+        }
+      },
+      visualMap: {
+        min: 0,
+        max: 1,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '8%',
+        itemWidth: 20,
+        itemHeight: 120,
+        textStyle: {
+          fontSize: 12,
+          color: '#333'
+        },
+        inRange: {
+          color: ['#ffffcc', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
         }
       },
       series: [{
@@ -376,6 +859,10 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         data: [],
         label: {
           show: false
+        },
+        itemStyle: {
+          borderColor: '#fff',
+          borderWidth: 1
         }
       }]
     };
