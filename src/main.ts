@@ -1,6 +1,5 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { Heatmap } from './app/heatmap/heatmap';
+import { AppComponent } from './app/app';
+import { appConfig } from './app/app.config';
 
-bootstrapApplication(Heatmap, {
-  providers: []
-}).catch(err => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch(err => console.error(err));
