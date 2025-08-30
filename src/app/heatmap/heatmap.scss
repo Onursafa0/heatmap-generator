@@ -15,48 +15,79 @@
 .icon-clear:before { font-family: sans-serif; content: "×"; font-size: 1.2em; }
 .icon-upload:before { font-family: sans-serif; content: "↑"; }
 .icon-download:before { font-family: sans-serif; content: "↓"; }
-
-:root {
-  --bg-color: #0f172a;
-  --card-bg-color: #1e293b;
-  --text-color: #f0e9e2;
-  --text-muted-color: #94a3b8;
-  --border-color: #334155;
-  --primary-color: #0ea5e9;
-  --primary-hover-color: #38bdf8;
-  --secondary-color: #334155;
-  --secondary-hover-color: #475569;
-  --font-family: 'Inter', sans-serif;
-}
+.icon-random:before { font-family: sans-serif; content: "🎲"; }
+.icon-info:before { font-family: sans-serif; content: "ℹ"; }
+.icon-sun:before { font-family: sans-serif; content: "☀"; }
+.icon-moon:before { font-family: sans-serif; content: "🌙"; }
 
 body {
-  background-color: var(--bg-color);
-  font-family: var(--font-family);
-  color: var(--text-color);
-  transition: background-color 0.3s;
+  font-family: 'Inter', sans-serif;
 }
 
-.container {
+.heatmap-container {
   max-width: 1400px;
   margin: 2rem auto;
   padding: 1rem 2rem;
 }
 
-.header {
+.heatmap-header {
   text-align: center;
   margin-bottom: 3rem;
-  h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(45deg, var(--primary-color), #a78bfa);
+}
+
+.heatmap-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.heatmap-title-section {
+  flex: 1;
+  text-align: left;
+}
+
+.heatmap-theme-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  
+  &:hover {
+    background-color: var(--secondary-hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
-  p {
-    font-size: 1.1rem;
-    color: var(--text-muted-color);
+  
+  i {
+    margin-right: 0.5rem;
+    font-size: 1.1em;
   }
 }
 
-.card {
+.heatmap-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.heatmap-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-muted-color);
+  margin: 0.5rem 0 0 0;
+}
+
+.heatmap-card {
   background-color: var(--card-bg-color);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -66,7 +97,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.card-title {
+.heatmap-card-title {
   font-size: 1.5rem;
   font-weight: 500;
   margin-top: 0;
@@ -75,7 +106,7 @@ body {
   padding-bottom: 1rem;
 }
 
-.config-form {
+.heatmap-config-form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -83,25 +114,37 @@ body {
   justify-content: center;
 }
 
-.form-field {
+.heatmap-form-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  
   label {
     font-size: 0.9rem;
     color: var(--text-muted-color);
   }
-  input {
+  
+  input, select {
     background-color: var(--bg-color);
-    border: 1px solid black;
+    border: 1px solid var(--border-color);
     color: var(--text-color);
     padding: 0.75rem;
     border-radius: 8px;
     transition: all 0.2s ease;
+    
     &:focus {
       outline: none;
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+    }
+  }
+  
+  select {
+    cursor: pointer;
+    
+    option {
+      background-color: var(--bg-color);
+      color: var(--text-color);
     }
   }
   
@@ -116,11 +159,38 @@ body {
   }
 }
 
-.button-group {
+.heatmap-button-group {
   display: flex;
   gap: 1rem;
   margin-left: auto;
 }
+
+.heatmap-diamond-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.heatmap-info-card {
+  background-color: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.heatmap-info-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  line-height: 1.4;
+  
+  strong {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+}
+
+
 
 .btn {
   padding: 0.75rem 1.5rem;
@@ -135,19 +205,23 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
   
   &-primary {
-    background-color: #2c3e50;
-    color: rgb(201, 201, 201);
+    background-color: var(--primary-color);
+    color: white;
+    
     &:hover:not(:disabled) {
+      background-color: var(--primary-hover-color);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
   }
   
   &-secondary {
-    background-color: #2c3e50;
-    color: rgb(201, 201, 201);
+    background-color: var(--secondary-color);
+    color: white;
     border-color: var(--border-color);
+    
     &:hover:not(:disabled) {
+      background-color: var(--secondary-hover-color);
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
@@ -159,35 +233,153 @@ body {
   }
 }
 
-.data-grid-wrapper {
+.heatmap-data-grid-wrapper {
   overflow-x: auto;
 }
-.data-grid {
-  display: grid;
-  gap: 5px;
-  padding-bottom: 1rem;
-}
-.grid-cell {
-  background-color: #2c3e50;
+
+.heatmap-data-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-color);
+  border-radius: 8px;
   border: 1px solid var(--border-color);
-  color: rgb(201, 201, 201);
-  text-align: center;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  width: 100%;
-  height: 45px;
-  transition: all 0.2s ease;
-  &:focus {
-    outline: none;
-    background-color: #334155;
-    border-color: var(--primary-color);
+}
+
+.heatmap-random-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  max-width: 250px;
+  
+  &:hover:not(:disabled) {
+    background-color: var(--secondary-hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
-  &::placeholder {
-    color: var(--text-muted-color);
+  
+  i {
+    margin-right: 0.5rem;
   }
 }
 
-.heatmap-header {
+.heatmap-data-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted-color);
+  margin: 0;
+  font-style: italic;
+}
+
+.heatmap-data-grid {
+  display: grid;
+  gap: 8px;
+  padding: 1rem;
+  background-color: var(--card-bg-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.heatmap-grid-cell {
+  background-color: var(--bg-color);
+  border: 2px solid var(--border-color);
+  color: var(--text-color);
+  text-align: center;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 100%;
+  height: 45px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+  
+  &:focus {
+    outline: none;
+    background-color: var(--card-bg-color);
+    border-color: var(--primary-color);
+    border-width: 3px;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2), 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  &::placeholder {
+    color: var(--text-muted-color);
+    font-weight: normal;
+  }
+  
+  &.heatmap-diamond-cell {
+    background-color: var(--card-bg-color);
+    border-color: var(--primary-color);
+    border-width: 3px;
+    color: var(--text-color);
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      border-color: var(--primary-hover-color);
+      background-color: var(--card-bg-color);
+      box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    &:focus {
+      background-color: var(--card-bg-color);
+      border-color: var(--primary-hover-color);
+      border-width: 4px;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.3), 0 8px 20px rgba(14, 165, 233, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+    }
+  }
+  
+  &.heatmap-disabled-cell {
+    background-color: var(--bg-color);
+    border-color: var(--text-muted-color);
+    border-width: 1px;
+    border-style: dashed;
+    color: var(--text-muted-color);
+    cursor: not-allowed;
+    opacity: 0.3;
+    box-shadow: none;
+    font-weight: normal;
+    
+    &:hover {
+      border-color: var(--text-muted-color);
+      box-shadow: none;
+      transform: none;
+      background-color: var(--bg-color);
+    }
+    
+    &:focus {
+      outline: none;
+      background-color: var(--bg-color);
+      border-color: var(--text-muted-color);
+      border-width: 1px;
+      border-style: dashed;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+}
+
+.heatmap-chart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -196,9 +388,9 @@ body {
   padding-bottom: 1rem;
 }
 
-.btn-download {
-  background-color: #2c3e50;
-  color: rgb(201, 201, 201);
+.heatmap-download-btn {
+  background-color: var(--primary-color);
+  color: white;
   border: 1px solid var(--border-color);
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -211,6 +403,7 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
   
   &:hover:not(:disabled) {
+    background-color: var(--primary-hover-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
@@ -226,7 +419,7 @@ body {
   min-height: 520px;
 }
 
-.echarts-chart {
+.heatmap-echarts-chart {
   width: 100%;
   height: 500px;
 }
@@ -245,30 +438,42 @@ body {
   border-radius: 8px !important;
 }
 
-
 @media (max-width: 768px) {
-  .container {
+  .heatmap-container {
     margin: 1rem auto;
     padding: 0.5rem 1rem;
   }
   
-  .header h1 {
+  .heatmap-header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .heatmap-title-section {
+    text-align: center;
+  }
+  
+  .heatmap-header .heatmap-title {
     font-size: 2rem;
   }
   
-  .card {
+  .heatmap-theme-btn {
+    align-self: center;
+  }
+  
+  .heatmap-card {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
   
-  .config-form {
+  .heatmap-config-form {
     flex-direction: column;
     gap: 1rem;
     justify-content: center;
     align-items: center;
   }
   
-  .form-field {
+  .heatmap-form-field {
     width: 100%;
     max-width: 300px;
     
@@ -281,25 +486,38 @@ body {
     }
   }
   
-  .button-group {
+  .heatmap-button-group {
     margin-left: 0;
     flex-direction: column;
     width: 100%;
     max-width: 300px;
   }
   
-  .heatmap-header {
+  .heatmap-diamond-info {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+  
+  .heatmap-info-card {
+    padding: 0.5rem;
+  }
+  
+  .heatmap-info-text {
+    font-size: 0.8rem;
+  }
+  
+  .heatmap-chart-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
   
-  .btn-download {
+  .heatmap-download-btn {
     width: 100%;
     justify-content: center;
   }
   
-  .echarts-chart {
+  .heatmap-echarts-chart {
     height: 400px;
   }
   
@@ -307,30 +525,43 @@ body {
     min-height: 420px;
   }
   
-  .data-grid {
+  .heatmap-data-grid {
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)) !important;
   }
   
-  .grid-cell {
+  .heatmap-grid-cell {
     height: 40px;
     font-size: 0.8rem;
+  }
+  
+  .heatmap-data-controls {
+    padding: 0.75rem;
+  }
+  
+  .heatmap-random-btn {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .container {
+  .heatmap-container {
     padding: 0.5rem;
   }
   
-  .header h1 {
+  .heatmap-header .heatmap-title {
     font-size: 1.5rem;
   }
   
-  .card {
+  .heatmap-theme-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .heatmap-card {
     padding: 1rem;
   }
   
-  .echarts-chart {
+  .heatmap-echarts-chart {
     height: 300px;
   }
   
@@ -338,7 +569,7 @@ body {
     min-height: 320px;
   }
   
-  .grid-cell {
+  .heatmap-grid-cell {
     height: 35px;
     font-size: 0.75rem;
   }

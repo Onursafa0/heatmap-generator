@@ -15,6 +15,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   configForm: FormGroup;
   gridData: (number | null)[][] = [];
   isGridGenerated = false;
+  isDarkMode = true;
   private chart: echarts.ECharts | null = null;
 
   @ViewChild('heatmapChart') private chartContainer!: ElementRef;
@@ -22,9 +23,43 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   constructor(private fb: FormBuilder) {
     this.configForm = this.fb.group({
       title: ['Heatmap', [Validators.required, Validators.maxLength(100)]],
+      shape: ['rectangle', [Validators.required]],
       rows: [8, [Validators.required, Validators.min(1), Validators.max(50)]],
       cols: [12, [Validators.required, Validators.min(1), Validators.max(50)]],
+      diamondSize: [5, [Validators.required, Validators.min(1), Validators.max(20)]],
     });
+    
+    this.initializeTheme();
+  }
+
+  private initializeTheme(): void {
+    const savedTheme = localStorage.getItem('heatmap-theme');
+    if (savedTheme === 'light') {
+      this.isDarkMode = false;
+      this.applyTheme('light');
+    } else {
+      this.isDarkMode = true;
+      this.applyTheme('dark');
+    }
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    const theme = this.isDarkMode ? 'dark' : 'light';
+    this.applyTheme(theme);
+    localStorage.setItem('heatmap-theme', theme);
+    
+    if (this.chart && this.isGridGenerated) {
+      this.updateChart();
+    }
+  }
+
+  private applyTheme(theme: 'dark' | 'light'): void {
+    if (theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
   }
 
   ngAfterViewInit(): void {
@@ -41,6 +76,16 @@ export class Heatmap implements AfterViewInit, OnDestroy {
 
   generateGrid(): void {
     if (this.configForm.invalid) return;
+    
+    if (this.configForm.value.shape === 'diamond') {
+      const diamondSize = this.configForm.value.diamondSize || 5;
+      const gridSize = diamondSize;
+      this.configForm.patchValue({
+        rows: gridSize,
+        cols: gridSize
+      });
+    }
+    
     this.clearData();
     this.isGridGenerated = true;
     setTimeout(() => this.initChart(), 0);
@@ -55,7 +100,84 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     }
   }
 
+  generateRandomData(): void {
+    if (!this.isGridGenerated) return;
+    
+    const rows = this.configForm.value.rows || 0;
+    const cols = this.configForm.value.cols || 0;
+    const shape = this.configForm.value.shape || 'rectangle';
+    
+    if (shape === 'rectangle') {
+      this.generateRectangleData(rows, cols);
+    } else if (shape === 'diamond') {
+      this.generateDiamondData(rows, cols);
+    }
+    
+    this.updateChart();
+  }
+
+  private generateRectangleData(rows: number, cols: number): void {
+    const centerRow = (rows - 1) / 2;
+    const centerCol = (cols - 1) / 2;
+    const maxDistance = Math.sqrt(centerRow * centerRow + centerCol * centerCol);
+    
+    this.gridData = Array.from({ length: rows }, (_, i) => 
+      Array.from({ length: cols }, (_, j) => {
+        const distanceFromCenter = Math.sqrt(
+          Math.pow(i - centerRow, 2) + Math.pow(j - centerCol, 2)
+        );
+        
+        const temperatureFactor = 1 - (distanceFromCenter / maxDistance);
+        
+        const baseValue = 340;
+        const range = 10;
+        const weightedValue = baseValue + (range * temperatureFactor);
+        
+        const randomVariation = (Math.random() - 0.5) * 2;
+        
+        const finalValue = Math.max(340, Math.min(350, weightedValue + randomVariation));
+        
+        return Math.round(finalValue * 10) / 10;
+      })
+    );
+  }
+
+  private generateDiamondData(rows: number, cols: number): void {
+    const centerRow = (rows - 1) / 2;
+    const centerCol = (cols - 1) / 2;
+    
+    const diamondSize = this.configForm.value.diamondSize || 5;
+    const radius = Math.floor(diamondSize / 2);
+    
+    this.gridData = Array.from({ length: rows }, (_, i) => 
+      Array.from({ length: cols }, (_, j) => {
+        const manhattanDistance = Math.abs(i - centerRow) + Math.abs(j - centerCol);
+        
+        if (manhattanDistance > radius) {
+          return null;
+        }
+        
+        const normalizedDistance = manhattanDistance / radius;
+        const temperatureFactor = 1 - normalizedDistance;
+        
+        const baseValue = 340;
+        const range = 10;
+        const weightedValue = baseValue + (range * temperatureFactor);
+        
+        const randomVariation = (Math.random() - 0.5) * 2;
+        
+        const finalValue = Math.max(340, Math.min(350, weightedValue + randomVariation));
+        
+        return Math.round(finalValue * 10) / 10;
+      })
+    );
+  }
+
   onCellValueChange(value: string, rowIndex: number, colIndex: number): void {
+    if (this.isDiamondShape() && !this.isDiamondCell(rowIndex, colIndex)) {
+      return;
+    }
+    
     this.gridData[rowIndex][colIndex] = value === '' ? null : parseFloat(value);
     this.updateChart();
   }
@@ -64,6 +186,33 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     if (this.isGridGenerated) {
       this.updateChart();
     }
+  }
+
+  onShapeChange(): void {
+    if (this.isGridGenerated) {
+      this.generateRandomData();
+    }
+  }
+
+  isDiamondShape(): boolean {
+    return this.configForm.value.shape === 'diamond';
+  }
+
+  isDiamondCell(row: number, col: number): boolean {
+    if (!this.isDiamondShape()) return true;
+    
+    const rows = this.configForm.value.rows || 0;
+    const cols = this.configForm.value.cols || 0;
+    
+    const centerRow = (rows - 1) / 2;
+    const centerCol = (cols - 1) / 2;
+    
+    const diamondSize = this.configForm.value.diamondSize || 5;
+    const radius = Math.floor(diamondSize / 2);
+    
+    const manhattanDistance = Math.abs(row - centerRow) + Math.abs(col - centerCol);
+    
+    return manhattanDistance <= radius;
   }
 
   downloadPDF(): void {
@@ -654,42 +803,54 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const [min, max] = [Math.min(...allValues), Math.max(...allValues)];
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
     const average = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+    const shape = this.configForm.value.shape || 'rectangle';
     
     const data: [number, number, number][] = [];
     for (let i = 0; i < this.gridData.length; i++) {
       for (let j = 0; j < this.gridData[i].length; j++) {
         const value = this.gridData[i][j];
+        const yCoord = this.configForm.value.rows - 1 - i;
         if (value !== null && !isNaN(value)) {
-          const yCoord = this.configForm.value.rows - 1 - i;
           data.push([j, yCoord, value]);
+        } else {
+          data.push([j, yCoord, null as any]);
         }
       }
     }
 
+    const textColor = this.isDarkMode ? '#f0e9e2' : '#1e293b';
+    const tooltipBg = this.isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipBorder = this.isDarkMode ? '#334155' : '#ccc';
+    const tooltipTextColor = this.isDarkMode ? '#f0e9e2' : '#333';
+    const visualMapTextColor = this.isDarkMode ? '#f0e9e2' : '#333';
+    const graphicTextColor = this.isDarkMode ? '#f0e9e2' : '#000000';
+    const graphicStrokeColor = this.isDarkMode ? '#1e293b' : '#ffffff';
+
     const option = {
       title: {
-        text: this.configForm.value.title || 'Heatmap',
+        text: `${this.configForm.value.title || 'Heatmap'} (${shape === 'diamond' ? 'Diamond' : 'Standard Grid'})`,
         left: 'center',
         top: '3%',
         textStyle: {
-          color: '#000000',
+          color: textColor,
           fontSize: 20,
           fontWeight: 'bold'
         }
       },
       tooltip: {
         position: 'top',
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        borderColor: '#ccc',
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
         borderWidth: 1,
         textStyle: {
-          color: '#333'
+          color: tooltipTextColor
         },
         formatter: function (params: any) {
           const value = params.data[2];
-          return `Value: <b>${typeof value === 'number' ? value.toFixed(2) : value}</b>`;
+          return `<b>${typeof value === 'number' ? value.toFixed(2) : value}</b>`;
         }
       },
       grid: {
@@ -741,7 +902,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         itemHeight: 120,
         textStyle: {
           fontSize: 12,
-          color: '#333'
+          color: visualMapTextColor
         },
         inRange: {
           color: ['#ffffcc', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
@@ -755,15 +916,17 @@ export class Heatmap implements AfterViewInit, OnDestroy {
           show: false
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: this.isDarkMode ? '#334155' : '#fff',
           borderWidth: 1
         },
+        silent: false,
+        animation: false,
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
+            shadowColor: this.isDarkMode ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)',
             borderWidth: 2,
-            borderColor: '#333'
+            borderColor: this.isDarkMode ? '#0ea5e9' : '#333'
           }
         }
       }],
@@ -772,11 +935,11 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         left: 'left',
         bottom: 'bottom',
         style: {
-          text: `Average: ${average.toFixed(2)}`,
+          text: `Average: ${average.toFixed(2)} | Pattern: ${shape === 'diamond' ? 'Diamond' : 'Standard Grid'}`,
           fontSize: 14,
           fontWeight: 'bold',
-          fill: '#000000',
-          stroke: '#ffffff',
+          fill: graphicTextColor,
+          stroke: graphicStrokeColor,
           strokeWidth: 2
         },
         position: [20, -30]
@@ -787,13 +950,17 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   }
 
   private getEmptyChartOption(): any {
+    const textColor = this.isDarkMode ? '#f0e9e2' : '#1e293b';
+    const visualMapTextColor = this.isDarkMode ? '#f0e9e2' : '#333';
+    const borderColor = this.isDarkMode ? '#334155' : '#fff';
+
     return {
       title: {
         text: this.configForm.value.title || 'Heatmap',
         left: 'center',
         top: '3%',
         textStyle: {
-          color: '#000000',
+          color: textColor,
           fontSize: 20,
           fontWeight: 'bold'
         }
@@ -847,7 +1014,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         itemHeight: 120,
         textStyle: {
           fontSize: 12,
-          color: '#333'
+          color: visualMapTextColor
         },
         inRange: {
           color: ['#ffffcc', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
@@ -861,7 +1028,7 @@ export class Heatmap implements AfterViewInit, OnDestroy {
           show: false
         },
         itemStyle: {
-          borderColor: '#fff',
+          borderColor: borderColor,
           borderWidth: 1
         }
       }]

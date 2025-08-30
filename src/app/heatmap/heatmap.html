@@ -1,64 +1,113 @@
-<div class="container">
-  <header class="header">
-    <h1>Heatmap Generator</h1>
-    <p>Data Visualization Tool</p>
-  </header>
-
-  <div class="card config-card">
-    <h2 class="card-title">Configuration</h2>
-    <form [formGroup]="configForm" (ngSubmit)="generateGrid()" class="config-form">
-      <div class="form-field">
-        <label for="title">Chart Title</label>
-        <input id="title" type="text" formControlName="title" (input)="onTitleChange()">
+<main class="heatmap-container">
+  <header class="heatmap-header">
+    <div class="heatmap-header-content">
+      <div class="heatmap-title-section">
+        <h1 class="heatmap-title">Heatmap Generator</h1>
+        <p class="heatmap-subtitle">Data Visualization Tool</p>
       </div>
-      <div class="form-field">
-        <label for="rows">Number of Rows</label>
-        <input id="rows" type="number" formControlName="rows">
-      </div>
-      <div class="form-field">
-        <label for="cols">Number of Columns</label>
-        <input id="cols" type="number" formControlName="cols">
-      </div>
-      <div class="button-group">
-        <button type="submit" class="btn btn-primary" [disabled]="configForm.invalid">
-          <i class="icon-grid"></i> Generate Grid
-        </button>
-        <button type="button" class="btn btn-secondary" *ngIf="isGridGenerated" (click)="clearData()">
-          <i class="icon-clear"></i> Clear Data
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <div *ngIf="isGridGenerated" class="card data-card">
-    <h2 class="card-title">Data Input</h2>
-    <div class="data-grid-wrapper">
-      <div class="data-grid" [style.gridTemplateColumns]="'repeat(' + configForm.value.cols + ', minmax(60px, 1fr))'">
-        <ng-container *ngFor="let row of gridData; let i = index; trackBy: trackByRow">
-          <ng-container *ngFor="let cell of row; let j = index; trackBy: trackByCol">
-            <input
-              type="number"
-              class="grid-cell"
-              placeholder="0"
-              [value]="gridData[i][j]"
-              (input)="onCellValueChange($any($event.target).value, i, j)"
-            >
-          </ng-container>
-        </ng-container>
-      </div>
-    </div>
-  </div>
-
-  <div class="card heatmap-card" *ngIf="isGridGenerated">
-    <div class="heatmap-header">
-      <h2 class="card-title">Heatmap</h2>
-      <button type="button" class="btn btn-download" (click)="downloadPDF()">
-        <i class="icon-download"></i> Download PDF
+      <button 
+        type="button" 
+        class="btn btn-theme heatmap-theme-btn" 
+        (click)="toggleTheme()"
+        [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        <i [class]="isDarkMode ? 'icon-sun' : 'icon-moon'"></i>
+        {{ isDarkMode ? 'Light' : 'Dark' }}
       </button>
     </div>
-    <div class="heatmap-chart-container">
-      <div #heatmapChart class="echarts-chart"></div>
-    </div>
-  </div>
+  </header>
 
-</div>
+  <section class="heatmap-config-section">
+    <div class="heatmap-card heatmap-config-card">
+      <h2 class="heatmap-card-title">Configuration</h2>
+      <form [formGroup]="configForm" (ngSubmit)="generateGrid()" class="heatmap-config-form">
+        <div class="heatmap-form-field">
+          <label for="title">Chart Title</label>
+          <input id="title" type="text" formControlName="title" (input)="onTitleChange()">
+        </div>
+        <div class="heatmap-form-field">
+          <label for="shape">Grid Type</label>
+          <select id="shape" formControlName="shape" class="heatmap-shape-select" (change)="onShapeChange()">
+            <option value="rectangle">Standard</option>
+            <option value="diamond">Diamond</option>
+          </select>
+        </div>
+        <div class="heatmap-form-field" *ngIf="!isDiamondShape()">
+          <label for="rows">Number of Rows</label>
+          <input id="rows" type="number" formControlName="rows">
+        </div>
+        <div class="heatmap-form-field" *ngIf="!isDiamondShape()">
+          <label for="cols">Number of Columns</label>
+          <input id="cols" type="number" formControlName="cols">
+        </div>
+        <div class="heatmap-form-field" *ngIf="isDiamondShape()">
+          <label for="diamondSize">Diamond Diameter</label>
+          <input id="diamondSize" type="number" formControlName="diamondSize" min="1" max="20">
+        </div>
+        <div class="heatmap-button-group">
+          <button type="submit" class="btn btn-primary heatmap-generate-btn" [disabled]="configForm.invalid">
+            <i class="icon-grid"></i> Generate Grid
+          </button>
+          <button type="button" class="btn btn-secondary heatmap-clear-btn" *ngIf="isGridGenerated" (click)="clearData()">
+            <i class="icon-clear"></i> Clear Data
+          </button>
+        </div>
+      </form>
+      
+      <div class="heatmap-diamond-info" *ngIf="isDiamondShape()">
+        <div class="heatmap-info-card">
+          <p class="heatmap-info-text">
+            💡 <strong>Diamond Diameter:</strong> Length of one arm. Grid size = diameter × diameter. 
+            Only diamond pattern cells will be active.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="heatmap-data-section" *ngIf="isGridGenerated">
+    <div class="heatmap-card heatmap-data-card">
+      <h2 class="heatmap-card-title">Data Input</h2>
+      <div class="heatmap-data-controls">
+        <button type="button" class="btn btn-random heatmap-random-btn" (click)="generateRandomData()">
+          Generate Random Data
+        </button>
+        <p class="heatmap-data-hint" *ngIf="!isDiamondShape()">Fill cells manually with any values or use the button above to generate random values (340-350 range, all cells filled)</p>
+        <p class="heatmap-data-hint" *ngIf="isDiamondShape()">Fill diamond pattern cells manually with any values or use the button above to generate random values (340-350 range). Only highlighted cells are active for diamond pattern. Grid size: {{configForm.value.rows}}x{{configForm.value.cols}}.</p>
+      </div>
+      <div class="heatmap-data-grid-wrapper">
+        <div class="heatmap-data-grid" [style.gridTemplateColumns]="'repeat(' + configForm.value.cols + ', minmax(60px, 1fr))'">
+          <ng-container *ngFor="let row of gridData; let i = index; trackBy: trackByRow">
+            <ng-container *ngFor="let cell of row; let j = index; trackBy: trackByCol">
+              <input
+                type="number"
+                class="heatmap-grid-cell"
+                [class.heatmap-diamond-cell]="isDiamondShape() && isDiamondCell(i, j)"
+                [class.heatmap-disabled-cell]="isDiamondShape() && !isDiamondCell(i, j)"
+                placeholder="0"
+                [value]="gridData[i][j]"
+                [disabled]="isDiamondShape() && !isDiamondCell(i, j)"
+                (input)="onCellValueChange($any($event.target).value, i, j)"
+              >
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="heatmap-visualization-section" *ngIf="isGridGenerated">
+    <div class="heatmap-card heatmap-chart-card">
+      <div class="heatmap-chart-header">
+        <h2 class="heatmap-card-title">Heatmap</h2>
+        <button type="button" class="btn btn-download heatmap-download-btn" (click)="downloadPDF()">
+          <i class="icon-download"></i> Download PDF
+        </button>
+      </div>
+      <div class="heatmap-chart-container">
+        <div #heatmapChart class="heatmap-echarts-chart"></div>
+      </div>
+    </div>
+  </section>
+
+</main>

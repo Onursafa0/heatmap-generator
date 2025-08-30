@@ -1,49 +1,40 @@
 # 🔥 Heatmap Generator
 
-A modern and interactive heatmap chart generator built with Angular. Users can manually input data and create professional heatmap visualizations using ECharts.
+Modern and interactive heatmap generator application. Built with Angular, it allows users to create professional heatmap visualizations through manual data entry or random data generation.
 
-## 🔗 Live Demo
-Try the application live at:
+## 🌐 Demo
 
-[Heatmap Generator](https://onursafa0.github.io/heatmap-generator/)
+[Live Demo](https://onursafa0.github.io/heatmap-generator/)
 
 ## ✨ Features
 
-- 🎯 **Manual Data Input**: Dynamic grid creation and data entry
-- 📊 **ECharts Integration**: Powerful and fast chart rendering engine
-- 🎨 **Modern UI/UX**: Professional appearance
-- 📱 **Responsive Design**: Compatible with all devices
-- ⚡ **Real-time Updates**: Instant chart updates on data changes
-- 📈 **Automatic Average Calculation**: Calculates and displays the average of all entered values
-- 🎨 **Customizable Colors**: Yellow to red color palette
-- 🔍 **Interactive Tooltip**: Detailed information on hover
-- ✏️ **Customizable Title**: User-defined chart title
-- 📥 **PDF Export**: Download generated charts in PDF format with data table
-- 🧹 **Clean Code**: Well-structured, comment-free, and maintainable codebase
+- **Manual Data Entry**: Dynamic grid creation and data input
+- **Random Data Generation**: One-click realistic data generation (340-350 range)
+- **Diamond Shape**: Special diamond-patterned heatmap
+- **ECharts Integration**: Powerful and fast chart rendering engine
+- **Dark/Light Theme**: Automatic theme switching with localStorage support
+- **Responsive Design**: Compatible with all devices (mobile-first)
+- **PDF Export**: Download generated charts in PDF format
+- **Real-time Updates**: Instant chart updates on data changes
 
 ## 🛠️ Technologies
 
-- **Frontend Framework**: Angular 20
-- **Chart Library**: ECharts 6.0
-- **PDF Library**: jsPDF 3.0
-- **Programming Language**: TypeScript 5.8
-- **Styling**: SCSS with CSS Variables
-- **Build Tool**: Angular CLI
-- **Package Manager**: npm
+- **Frontend**: Angular 20, TypeScript 5.8.2
+- **Charts**: ECharts 6.0
+- **PDF**: jsPDF 3.0.1
+- **Styling**: SCSS, CSS Grid/Flexbox
 - **Deployment**: GitHub Pages
 
 ## 🚀 Installation
 
-Follow these steps to run the project on your computer.
-
 ### Requirements
-- Node.js (v18 or higher)
-- npm (v9 or higher)
-- Angular CLI (v20 or higher)
+- Node.js (v18+)
+- npm (v9+)
+- Angular CLI (v20+)
 
 ### Steps
 
-1. **Clone or download the repository**
+1. **Clone the repository**
    ```bash
    git clone https://github.com/Onursafa0/heatmap-generator
    cd heatmap-generator
@@ -64,121 +55,63 @@ Follow these steps to run the project on your computer.
    http://localhost:4200
    ```
 
-### Build for Production
-
+### Production Build
 ```bash
 npm run build
 ```
 
-### Deploy to GitHub Pages
-
+### GitHub Pages Deploy
 ```bash
 npm run deploy:gh
 ```
 
 ## 📖 Usage
 
-### 1. Chart Title
-- Enter a custom title for your chart
-- The title will appear at the top of the chart
+### 1. Configuration
+- **Chart Title**: Enter a custom title (maximum 100 characters)
+- **Grid Type**: Choose Standard (rectangle) or Diamond (diamond)
+- **Grid Size**: 
+  - Standard: Number of rows and columns (1-50)
+  - Diamond: Diamond diameter (1-20)
 
-### 2. Grid Creation
-- Set the number of rows and columns (1-50 range)
-- Click "Generate Grid" button
+### 2. Data Input
+- **Manual**: Enter numerical values in grid cells
+- **Random**: Generate automatic data with "Generate Random Data"
+- **Diamond Grid**: Only diamond-shaped cells are active
 
-### 3. Data Input
-- Enter numerical values in the created grid
-- Empty cells are automatically skipped
+### 3. Visualization
+- Automatic heatmap generation with ECharts
+- Yellow to red color scale
+- Detailed information display on hover
 
-### 4. Chart Display
-- Heatmap is automatically generated using ECharts
-- Color scale goes from yellow to red
-- Title appears at the top of the chart
-
-### 5. Chart Export
-- Click "Download PDF" to export the chart in PDF format
-- The PDF includes both the heatmap and a data table
-- Downloaded file is named with the title and includes generation date
-
-### 6. Real-time Updates
-- Chart updates instantly on data changes
-- Chart updates automatically on title changes
-- Detailed information display with tooltip
+### 4. Export
+- Download chart and data table as PDF with "Download PDF"
+- Large datasets supported with automatic pagination
 
 ## 🎨 Customization
 
-### Color Palette
-The application uses a default yellow to red color transition:
-- **Low values**: Yellow (`#ffffcc`)
-- **Medium values**: Orange (`#fdae61`)
-- **High values**: Red (`#a50026`)
+### Theme System
+- **Dark Theme**: Default dark theme
+- **Light Theme**: Light theme
+- Theme preference saved in localStorage
 
-### Grid Dimensions
-- **Minimum**: 1x1
-- **Maximum**: 50x50
-- **Default**: 8x12
+### Grid Types
+- **Standard Grid**: Traditional rectangle grid
+- **Diamond Grid**: Diamond-patterned special grid (Manhattan distance calculation)
 
-## 📊 PDF Export Features
+## 📱 Responsive Design
 
-The PDF export includes:
-- **Heatmap visualization**: Color-coded data representation
-- **Data table**: Excel-style table with all values
-- **Column headers**: C1, C2, C3, etc.
-- **Row labels**: R1, R2, R3, etc.
-- **Generation date**: Automatically added to the PDF
-- **Custom filename**: Based on the chart title
-- **Multi-page support**: Handles large datasets with automatic pagination
-
-## 📁 Project Structure
-
-```
-heatmap-generator/
-├── src/
-│   ├── app/
-│   │   ├── heatmap/
-│   │   │   ├── heatmap.ts          # Main component logic
-│   │   │   ├── heatmap.html        # Component template
-│   │   │   ├── heatmap.scss        # Component styles
-│   │   │   └── heatmap.spec.ts     # Component tests
-│   │   ├── app.ts                  # Root component
-│   │   ├── app.routes.ts           # Application routes
-│   │   ├── app.config.ts           # Application configuration
-│   │   └── app.spec.ts             # Root component tests
-│   ├── main.ts                     # Application entry point
-│   ├── styles.scss                 # Global styles
-│   └── index.html                  # Main HTML file
-├── public/
-│   └── favicon.ico                 # Application icon
-├── package.json                    # Dependencies and scripts
-├── angular.json                    # Angular CLI configuration
-├── tsconfig.json                   # TypeScript configuration
-└── README.md                       # Project documentation
-```
-
-## 🧹 Code Quality
-
-The project maintains high code quality standards:
-- **Clean Code**: No unnecessary comments or unused variables
-- **TypeScript**: Strict type checking enabled
-- **Modular Structure**: Well-organized component architecture
-- **Responsive Design**: Mobile-first approach with CSS Grid and Flexbox
-- **Error Handling**: Proper error handling for PDF generation and chart rendering
+- **Desktop**: 1400px maximum width
+- **Tablet**: Optimized layout below 768px
+- **Mobile**: Mobile-first design below 480px
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
-
-1. **Chart not displaying**: Make sure you have entered at least one valid numerical value in the grid
-2. **PDF download fails**: Check if your browser supports PDF generation and has sufficient memory
-3. **Grid not generating**: Ensure the form values are within the valid range (1-50 for rows/columns)
-
-### Browser Compatibility
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
+- **Chart not displaying**: Make sure you have at least one valid numerical value in the grid
+- **PDF download failed**: Check browser support and memory status
+- **Grid not generating**: Ensure form values are within valid range
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
