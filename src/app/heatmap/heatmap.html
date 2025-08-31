@@ -42,7 +42,7 @@
         </div>
         <div class="heatmap-form-field" *ngIf="isDiamondShape()">
           <label for="diamondSize">Diamond Diameter</label>
-          <input id="diamondSize" type="number" formControlName="diamondSize" min="1" max="20">
+          <input id="diamondSize" type="number" formControlName="diamondSize" min="1" max="60">
         </div>
         <div class="heatmap-button-group">
           <button type="submit" class="btn btn-primary heatmap-generate-btn" [disabled]="configForm.invalid">
@@ -57,8 +57,15 @@
       <div class="heatmap-diamond-info" *ngIf="isDiamondShape()">
         <div class="heatmap-info-card">
           <p class="heatmap-info-text">
-            💡 <strong>Diamond Diameter:</strong> Length of one arm. Grid size = diameter × diameter. 
-            Only diamond pattern cells will be active.
+            💡 <strong>Diamond Diameter:</strong> Grid size = diameter × diameter. Max: 60. Only diamond pattern cells active.
+          </p>
+        </div>
+      </div>
+      
+      <div class="heatmap-diamond-info" *ngIf="!isDiamondShape()">
+        <div class="heatmap-info-card">
+          <p class="heatmap-info-text">
+            💡 <strong>Standard Grid:</strong> Custom rows and columns. Max: 50 each. All cells active.
           </p>
         </div>
       </div>

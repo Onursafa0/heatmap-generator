@@ -1,6 +1,6 @@
 # 🔥 Heatmap Generator
 
-Modern and interactive heatmap generator application. Built with Angular, it allows users to create professional heatmap visualizations through manual data entry or random data generation.
+Modern and interactive heatmap generator application built with Angular. Create professional heatmap visualizations through manual data entry or random data generation.
 
 ## 🌐 Demo
 
@@ -72,7 +72,7 @@ npm run deploy:gh
 - **Grid Type**: Choose Standard (rectangle) or Diamond (diamond)
 - **Grid Size**: 
   - Standard: Number of rows and columns (1-50)
-  - Diamond: Diamond diameter (1-20)
+  - Diamond: Diamond diameter (1-60)
 
 ### 2. Data Input
 - **Manual**: Enter numerical values in grid cells

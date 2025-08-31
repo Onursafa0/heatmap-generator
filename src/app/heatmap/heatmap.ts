@@ -26,9 +26,8 @@ export class Heatmap implements AfterViewInit, OnDestroy {
       shape: ['rectangle', [Validators.required]],
       rows: [8, [Validators.required, Validators.min(1), Validators.max(50)]],
       cols: [12, [Validators.required, Validators.min(1), Validators.max(50)]],
-      diamondSize: [5, [Validators.required, Validators.min(1), Validators.max(20)]],
+      diamondSize: [5, [Validators.required, Validators.min(1), Validators.max(60)]],
     });
-    
     this.initializeTheme();
   }
 
@@ -48,7 +47,6 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     const theme = this.isDarkMode ? 'dark' : 'light';
     this.applyTheme(theme);
     localStorage.setItem('heatmap-theme', theme);
-    
     if (this.chart && this.isGridGenerated) {
       this.updateChart();
     }
@@ -76,7 +74,6 @@ export class Heatmap implements AfterViewInit, OnDestroy {
 
   generateGrid(): void {
     if (this.configForm.invalid) return;
-    
     if (this.configForm.value.shape === 'diamond') {
       const diamondSize = this.configForm.value.diamondSize || 5;
       const gridSize = diamondSize;
@@ -85,7 +82,6 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         cols: gridSize
       });
     }
-    
     this.clearData();
     this.isGridGenerated = true;
     setTimeout(() => this.initChart(), 0);
@@ -102,17 +98,14 @@ export class Heatmap implements AfterViewInit, OnDestroy {
 
   generateRandomData(): void {
     if (!this.isGridGenerated) return;
-    
     const rows = this.configForm.value.rows || 0;
     const cols = this.configForm.value.cols || 0;
     const shape = this.configForm.value.shape || 'rectangle';
-    
     if (shape === 'rectangle') {
       this.generateRectangleData(rows, cols);
     } else if (shape === 'diamond') {
       this.generateDiamondData(rows, cols);
     }
-    
     this.updateChart();
   }
 
@@ -126,17 +119,12 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         const distanceFromCenter = Math.sqrt(
           Math.pow(i - centerRow, 2) + Math.pow(j - centerCol, 2)
         );
-        
         const temperatureFactor = 1 - (distanceFromCenter / maxDistance);
-        
         const baseValue = 340;
         const range = 10;
         const weightedValue = baseValue + (range * temperatureFactor);
-        
         const randomVariation = (Math.random() - 0.5) * 2;
-        
         const finalValue = Math.max(340, Math.min(350, weightedValue + randomVariation));
-        
         return Math.round(finalValue * 10) / 10;
       })
     );
@@ -145,7 +133,6 @@ export class Heatmap implements AfterViewInit, OnDestroy {
   private generateDiamondData(rows: number, cols: number): void {
     const centerRow = (rows - 1) / 2;
     const centerCol = (cols - 1) / 2;
-    
     const diamondSize = this.configForm.value.diamondSize || 5;
     const radius = Math.floor(diamondSize / 2);
     
@@ -159,15 +146,11 @@ export class Heatmap implements AfterViewInit, OnDestroy {
         
         const normalizedDistance = manhattanDistance / radius;
         const temperatureFactor = 1 - normalizedDistance;
-        
         const baseValue = 340;
         const range = 10;
         const weightedValue = baseValue + (range * temperatureFactor);
-        
         const randomVariation = (Math.random() - 0.5) * 2;
-        
         const finalValue = Math.max(340, Math.min(350, weightedValue + randomVariation));
-        
         return Math.round(finalValue * 10) / 10;
       })
     );
@@ -177,7 +160,6 @@ export class Heatmap implements AfterViewInit, OnDestroy {
     if (this.isDiamondShape() && !this.isDiamondCell(rowIndex, colIndex)) {
       return;
     }
-    
     this.gridData[rowIndex][colIndex] = value === '' ? null : parseFloat(value);
     this.updateChart();
   }
@@ -200,18 +182,13 @@ export class Heatmap implements AfterViewInit, OnDestroy {
 
   isDiamondCell(row: number, col: number): boolean {
     if (!this.isDiamondShape()) return true;
-    
     const rows = this.configForm.value.rows || 0;
     const cols = this.configForm.value.cols || 0;
-    
     const centerRow = (rows - 1) / 2;
     const centerCol = (cols - 1) / 2;
-    
     const diamondSize = this.configForm.value.diamondSize || 5;
     const radius = Math.floor(diamondSize / 2);
-    
     const manhattanDistance = Math.abs(row - centerRow) + Math.abs(col - centerCol);
-    
     return manhattanDistance <= radius;
   }
 
